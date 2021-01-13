@@ -1,0 +1,178 @@
+---
+title: "ana"
+output: html_document
+---
+
+```{r}
+bi <-   read.csv2("C:/Users/Administrateur/Downloads/bi.csv",sep=",")
+
+```
+
+
+```{r }
+View(bi)
+```
+
+
+```{r}
+bi <- bi[,-c(1:3)]
+```
+
+
+
+```{r}
+bi <- bi[,-c(18:19)]
+```
+
+```{r}
+bi <- bi[,-c(10)]
+```
+
+```{r}
+bi <- bi[,-c(11)]
+```
+j'ai supprimé la variable "gender" & "civilityTitle" : puisque nous pourrions utiliser la variable  "civilitéGenderId" pour l'analyse.
+```{r}
+
+```
+
+```{r}
+head(bi)
+```
+
+Ene effet,j'ai remarqué que certaines colonnes décrivent la meme chose (elles ont le meme sens  afin de fournir plus d'informations ). Par exemple, comme il est  décrit dans la description du jeu de données, les colonnes "seniority"" nous indiquent l'age du compte utilisateur. Puisque nous explorons les données à l'aide d'un compilateur, je supprimerai ces colonnes en double et crÃ©erai les miennes si nécessaire.
+```{r}
+bi$hasAnyApp<-ifelse(bi$hasAnyApp == "True",1,0)
+
+
+hist(bi$hasAnyApp)
+
+```
+La plupart des utilisateurs n'ont pas utilisé l'application mobile.
+```{r}
+bi$hasAndroidApp<-ifelse(bi$hasAndroidApp == "True",1,0) 
+bi$hasIosApp<-ifelse(bi$hasIosApp == "True",1,0)
+```
+Transformation des variables "hasAndroidApp" et "hasIosApp" en binaire
+```{r}
+bi$hasProfilePicture<-ifelse(bi$hasProfilePicture == "True",1,0)
+```
+
+Transformation de la variable "hasProfilePicture" en binaire
+
+
+```{r}
+hist(bi$civilityGenderId,sub="1=Monsieurs 2=Femmes mariées 3=Femmes celibataires")
+```
+
+On remarque que les femmes mariées semblent etre les utilisateurs les plus actifs de
+ce site.
+
+
+```{r}
+sum(bi$productsBought[which(bi$hasAnyApp == 0)])
+sum(bi$productsBought[which(bi$hasAnyApp == 1)])
+sum(bi$productsSold[which(bi$hasAnyApp == 0)])
+sum(bi$productsSold[which(bi$hasAnyApp == 1)])
+
+```
+
+
+Les utilisateurs qui ont une application mobile ont un pouvoir d'achat légèrement plus élevé; Les acheteurs sans application mobile ont tendance à avoir un pouvoir de vente légèrement plus élevé.
+
+```{r}
+cat("concernant les produits achtés selon l'etat civil \n\n")
+cat("La somme des clients hommes qui ont acheté des produits =",sum(bi$productsBought[which(bi$civilityGenderId == 1)]) ,"\n")
+cat("La moyenne des clients hommes qui ont acheté des produits =",mean(bi$productsBought[which(bi$civilityGenderId == 1)]) ,"\n")
+
+cat("La somme des clients femmes mariées qui ont acheté  des produits=",sum(bi$productsBought[which(bi$civilityGenderId == 2)]),"\n")
+cat("La moyenne des clients femmes mariées qui ont acheté  des produits=",mean(bi$productsBought[which(bi$civilityGenderId == 2)]),"\n")
+
+cat("La somme des clients femmes celibataires qui ont acheté  des produits=",sum(bi$productsBought[which(bi$civilityGenderId == 3)]),"\n")
+cat("La moyenne des clients femmes celibataires qui ont acheté  des produits=",mean(bi$productsBought[which(bi$civilityGenderId == 3)]),"\n\n")
+cat("concernant les produits vendu selon l'etat civil \n\n")
+
+cat("La somme des clients hommes qui ont vendu des produits=",sum(bi$productsSold[which(bi$civilityGenderId == 1)]),"\n")
+cat("La moyenne des clients hommes qui ont vendu des produits=",mean(bi$productsSold[which(bi$civilityGenderId == 1)]),"\n")
+cat("La somme des clients femmes mariées qui ont vendu des produits=",sum(bi$productsSold[which(bi$civilityGenderId == 2)]),"\n")
+cat("La moyenne des clients femmes mariées qui ont vendu des produits=",mean(bi$productsSold[which(bi$civilityGenderId == 2)]),"\n")
+cat("La somme des clients femmes celibataires qui ont vendu des produits=",sum(bi$productsSold[which(bi$civilityGenderId == 3)]),"\n")
+cat("La moyenne des clients femmes celibataires qui ont vendu des produits=",mean(bi$productsSold[which(bi$civilityGenderId == 3)]),"\n")
+```
+Malgré que les femme célibataires sont le plus petit groupe d'utilisateurs, leurs pouvoir d'achat est le plus élevé.
+```{r}
+table(bi$language)
+```
+
+La première langue utilisées est l'anglais et la deuxieme est le français.
+
+
+
+```{r}
+head(bi)
+```
+```{r}
+bi$countryCode <- factor(bi$countryCode)
+levels(bi$countryCode)
+bi$language <- factor(bi$language)
+levels(bi$language)
+```
+
+```{r}
+bi$civilityGenderId <- factor(bi$civilityGenderId)
+levels(bi$civilityGenderId)
+bi$civilityGenderId<-relevel(bi$civilityGenderId,ref=1)
+```
+On effet j'ai transformé la variable "civilityGenderId" en facteur, pour que le modele de regression linéaire aura un sens . 
+
+
+
+```{r}
+bi$seniorityAsYears<-as.numeric(bi$seniorityAsYears)
+bi$productsPassRate<-as.numeric(bi$productsPassRate)
+```
+```{r}
+str((bi))
+```
+```{r}
+R.Lin <- lm(productsSold ~socialNbFollows+socialNbFollowers+civilityGenderId+hasProfilePicture+seniorityAsYears+language,data=bi)
+summary(R.Lin )
+```
+```{r}
+obj<-cor(bi[,2:9],use = "pairwise.complete.obs")
+heatmap(obj,col=grey(seq(1,0,length=16)))
+```
+La variable "daysSinceLastLogin"" & "hasProfilePicture": semblent être négativement corrélés à toutes les autres variables. Cependant, seuls 1,95% des utilisateurs n'avaient pas de photo de profil.
+
+variable "socialNbFollowers"" & "socialNBFollows"" & "socialproductsLiked" & "productsListed"" & "productsSold"" & "productsPassRate"" & "productsWished"" semblent positivement liés les uns aux autres.
+
+la variable "seniority" semble ne pas être corrélée à toutes les autres variables
+
+```{r}
+clust=hclust(d=dist(bi[,2:5]),method="complete")
+clust
+#//Il n'est possible de realisér un dendo. car le nombre d'observation est énorme
+```
+```{r}
+library(psy)
+```
+
+```{r}
+expliquer<-"productsSold"
+explicative<-c("socialNbFollows","socialNbFollowers","civilityGenderId","hasProfilePicture","countryCode","seniorityAsYears")
+fpca(data=bi,y=expliquer,x=explicative,partial="NO")
+```
+```{r}
+inertie=c()
+for (k in 2:10) {clust=kmeans(bi[,2:16],centers=k,nstart=30,iter.max=100)
+
+ inertie=c(inertie,clust$tot.withinss)}
+inertie=c(clust$totss,inertie)
+plot(inertie,type="b")
+```
+La meilleur valeur de K est :2
+```{r}
+clust=kmeans(bi[,2:16],centers=2,nstart=30,iter.max=100)
+plot(bi [,2:16],col=c("red","blue","green")[clust$cluster],main=" clustering avec  kmeans")
+```
+
